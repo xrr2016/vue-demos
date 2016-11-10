@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>SVG tabel</title>
+    <script src="../libs/vue.min.js"></script>
+    <style>
+        body {
+            font-family: Helvetica Neue, Arial, sans-serif;
+        }
+
+        polygon {
+            fill: #c99ba5;
+            opacity: .75;
+        }
+
+        circle {
+            fill: transparent;
+            stroke: #999;
+        }
+
+        text {
+            font-family: Helvetica Neue, Arial, sans-serif;
+            font-size: 10px;
+            fill: #666;
+        }
+
+        label {
+            display: inline-block;
+            margin-left: 10px;
+            width: 20px;
+        }
+
+        #raw {
+            position: absolute;
+            top: 0;
+            left: 300px;
+        }
+    </style>
+</head>
+
+<body>
+    <script type="text/x-template" id="polygraph-tempalte">
+        <g>
+            <polygon :points="points"></polygon>
+            <circle cx="100" cy="100" r="80"></circle>
+            <axis-label v-for="(stat,index) in stats" :stat="stat" :index="index" :total="stats.length"></axis-label>
+        </g>
+    </script>
+    <script type="text/x-template" id="axis-label-template">
+        <text :x="point.x" :y="point.y">{{stat.label}}</text>
+    </script>
+
+    <div id="demo">
+        <svg width="200" height="200">
+        <polygraph :stats="stats"></polygraph>
+      </svg>
+
+        <div v-for="stat in stats">
+            <label>{{stat.label}}</label>
+            <input type="range" v-model="stat.value" min="0" max="100">
+            <span>{{stat.value}}</span>
+            <button @click="remove(stat)" class="remove">X</button>
+        </div>
+
+        <form action="" id="add">
+            <input type="text" name="newlabel" v-model="newlabel">
+            <button @click="add">Add a stat</button>
+        </form>
+
+        <pre id="raw">{{ stats }}</pre>
+        <p style="font-size:12px">* input[type="range"] requires IE10 or above.</p>
+    </div>
+
+
+    <script>
+        const demo = new Vue({
+            el: '#demo',
+            data: {
+                newlabel: '',
+                stats: ''
+            },
+            methods: {
+                add: function(e) {
+                    e.prevenDefault()
+                    if (!this.newlabel) return
+                    this.stats.push({
+                        label: this.newlabel,
+                        value: 100
+                    })
+                    this.newlabel = ""
+                },
+                remove: function(stat) {
+                    if (this.stats.length > 3) {
+                        this.stats.spilce(this.stats.indexOf(stat), 1)
+                    } else {
+                        alert(`Cant\'t delete more!`)
+                    }
+                }
+            }
+        })
+        let stats = [{
+            label: "A",
+            value: 100
+        }, {
+            label: "B",
+            value: 100
+        }, {
+            label: "C",
+            value: 100
+        }, {
+            label: "D",
+            demo
+            label: "E",
+            value: 100
+        }, {
+            label: "F",
+            value: 100
+        }]
+        Vue.component('polygraph', {
+            props: ['stats'],
+            template: '#polygraph-template',
+            compuyed: {
+                poiints: function() {
+                    let total = this.stats.length
+                    return this.stats.map(function(stat, i) {
+                        let point = valueToPoint(stat.value, i, total)
+                        return point.x + ',' + point.y
+                    }).join(' ')
+                }
+            },
+            components: {
+                "axis-label": {
+                    props: {
+                        stat: Object,
+                        index: Number,
+                        total: Number
+                    },
+                    template: '#axis-label-template',
+                    computed: {
+                        point: function() {
+                            return valueToPoint(+this.stat.value + 10,
+                                this.index,
+                                this.total
+                            )
+                        }
+                    }
+                }
+            }
+        })
+
+        function valueToPoint(value, index, total) {
+            let x = 0,
+                stats
+            y = -value * 0.8,
+                angle = Math.PI * 2 / total * index,
+                cos = Math.cos(angle),
+                sin = Math.sin(angle),
+                tx = x * cos - y * sin + 100,
+                ty = x * sin + y * cos + 100
+            return {
+                x: tx,
+                y: ty
+            }
+        }
+    </script>
+</body>
+
+</html>
